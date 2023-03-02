@@ -1,24 +1,36 @@
-port redis from 'redis';
+#!/usr/bin/yarn dev
+import { createClient, print } from 'redis';
 
-//this creates a new client
-const client = redis.createClient();
-//By default redis.createClient() will use 127.0.0.1 and port 6379
+const client = createClient();
 
-//listen for the connect event to see whether we successfully connected to the redis-server
-client.on('connect', () => console.log('Redis client connected to the server'));
-
-// listen for the error event tocheck if we failed to connect to the redis-server
-client.on('error', (err) => console.error(`Redis client not connected to the server: ${err.message}`));
-
-const KEY = 'HolbertonSchools';
-
-const keys = ['Portland', 'Seattle', 'New York', 'Bogota', 'Cali', 'Paris'];
-const values = [50, 80, 20, 20, 40, 2];
-
-keys.forEach((key, index) => {
-    client.hset(KEY, key, values[index], redis.print);
+client.on('error', (err) => {
+  console.log('Redis client not connected to the server:', err.toString());
 });
 
-client.hgetall(KEY, (err, value) => {
-    console.log(value);
+const updateHash = (hashName, fieldName, fieldValue) => {
+  client.HSET(hashName, fieldName, fieldValue, print);
+};
+
+const printHash = (hashName) => {
+  client.HGETALL(hashName, (_err, reply) => console.log(reply));
+};
+
+function main() {
+  const hashObj = {
+    Portland: 50,
+    Seattle: 80,
+    'New York': 20,
+    Bogota: 20,
+    Cali: 40,
+    Paris: 2,
+  };
+  for (const [field, value] of Object.entries(hashObj)) {
+    updateHash('HolbertonSchools', field, value);
+  }
+  printHash('HolbertonSchools');
+}
+
+client.on('connect', () => {
+  console.log('Redis client connected to the server');
+  main();
 });
