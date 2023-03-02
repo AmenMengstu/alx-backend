@@ -1,29 +1,25 @@
-import redis from 'redis';
+#!/usr/bin/yarn dev
+import { createClient, print } from 'redis';
 
-//this creates a new client
-const client = redis.createClient();
-//By default redis.createClient() will use 127.0.0.1 and port 6379
+const client = createClient();
 
-//listen for the connect event to see whether we successfully connected to the redis-server
-client.on('connect', () => console.log('Redis client connected to the server'));
+client.on('error', (err) => {
+  console.log('Redis client not connected to the server:', err.toString());
+});
 
-// listen for the error event tocheck if we failed to connect to the redis-server
-client.on('error', (err) => console.error(`Redis client not connected to the server: ${err.message}`));
+client.on('connect', () => {
+  console.log('Redis client connected to the server');
+});
 
-function setNewSchool(schoolName, value) {
-	//redis.print "Reply: OK" to the console saying that redis saved the value
-	client.set(schoolName, value, redis.print);
-}
+const setNewSchool = (schoolName, value) => {
+  client.SET(schoolName, value, print);
+};
 
-function displaySchoolValue(schoolName) {
-	client.get(schoolName, (err, result) => {
-		if (err) {
-			console.log(err);
-			throw err;
-		}
-	console.log(result);
-	});
-}
+const displaySchoolValue = (schoolName) => {
+  client.GET(schoolName, (_err, reply) => {
+    console.log(reply);
+  });
+};
 
 displaySchoolValue('Holberton');
 setNewSchool('HolbertonSanFrancisco', '100');
